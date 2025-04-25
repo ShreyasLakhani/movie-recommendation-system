@@ -5,7 +5,16 @@ const prisma = new PrismaClient()
 
 export async function GET() {
   const movies = await prisma.movie.findMany()
-  return NextResponse.json(movies)
+  const payload = movies.map((m) => ({
+    id: Number(m.id),
+    title: m.title,
+    overview: m.overview,
+    poster_path: m.posterPath,
+    release_date: m.releaseDate.toISOString().split('T')[0],
+    vote_average: m.rating,       // TMDB field name expected by MovieCard
+    genre_ids: [],                // or fetch/store genres later
+  }))
+  return NextResponse.json(payload)
 }
 
 export async function POST(request: Request) {
