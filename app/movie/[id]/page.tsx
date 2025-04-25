@@ -1,12 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getMovieDetails } from '@/app/services/tmdb';
 
 // Movie details page component
-export default function MoviePage({ params }: { params: { id: string } }) {
+export default function MoviePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  // unwrap the Promise
+  const { id } = use(params);
+
   const [movie, setMovie] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +23,7 @@ export default function MoviePage({ params }: { params: { id: string } }) {
     async function fetchMovieDetails() {
       try {
         setLoading(true);
-        const movieData = await getMovieDetails(parseInt(params.id));
+        const movieData = await getMovieDetails(parseInt(id));
         setMovie(movieData);
         setError(null);
       } catch (err) {
@@ -28,7 +35,7 @@ export default function MoviePage({ params }: { params: { id: string } }) {
     }
 
     fetchMovieDetails();
-  }, [params.id]);
+  }, [id]);
 
   // Display loading state
   if (loading) {

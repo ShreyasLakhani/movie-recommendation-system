@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Movie, getPopularMovies, searchMovies } from './services/tmdb';
+import { Movie, searchMovies } from './services/tmdb';
 import MovieGrid from './components/MovieGrid';
 import SearchBar from './components/SearchBar';
 
@@ -13,13 +13,15 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [searching, setSearching] = useState(false);
 
-  // Fetch popular movies on component mount
+  // Fetch from your own DB endpoint now
   useEffect(() => {
     async function fetchMovies() {
       try {
         setLoading(true);
-        const data = await getPopularMovies(1);
-        setMovies(data.results);
+        const res = await fetch('/api/movies');
+        if (!res.ok) throw new Error('Failed to load movies');
+        const data: Movie[] = await res.json();
+        setMovies(data);
         setError(null);
       } catch (err) {
         console.error('Error fetching movies:', err);
@@ -28,7 +30,6 @@ export default function Home() {
         setLoading(false);
       }
     }
-
     fetchMovies();
   }, []);
 
