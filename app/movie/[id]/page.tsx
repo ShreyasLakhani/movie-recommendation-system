@@ -23,7 +23,11 @@ export default function MoviePage({
     async function fetchMovieDetails() {
       try {
         setLoading(true);
-        const movieData = await getMovieDetails(parseInt(id));
+        const res = await fetch(`/api/movies/${id}`);
+        if (!res.ok) {
+          throw new Error('Failed to fetch movie details');
+        }
+        const movieData = await res.json();
         setMovie(movieData);
         setError(null);
       } catch (err) {
