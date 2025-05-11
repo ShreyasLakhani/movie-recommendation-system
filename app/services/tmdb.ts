@@ -3,7 +3,7 @@
 
 // Base URL and API endpoints
 const TMDB_API_BASE_URL = 'https://api.themoviedb.org/3';
-const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+const API_KEY = process.env.TMDB_API_KEY;
 
 // Type definitions for movie data
 export interface Movie {
