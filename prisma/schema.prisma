@@ -31,12 +31,14 @@ model Movie {
   id          String    @id
   title       String
   overview    String
-  posterPath  String
+  posterPath  String?
   releaseDate DateTime
   genres      Genre[]
   rating      Float
   duration    Int
   language    String
+  budget      Int?
+  revenue     Int?
   watchlist   User[]    @relation("UserWatchlist")
   ratings     Rating[]
   playlists   Playlist[]  @relation("PlaylistMovies")

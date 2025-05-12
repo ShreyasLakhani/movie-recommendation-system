@@ -7,43 +7,61 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  let m = await prisma.movie.findUnique({ where: { id } })
-  if (!m) {
-    // Fetch from TMDB using env API key
-    const apiKey = process.env.TMDB_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ error: 'TMDB API key not set' }, { status: 500 })
-    }
-    const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}`)
-    if (!tmdbRes.ok) {
-      const errorText = await tmdbRes.text();
-      console.error('TMDB error:', tmdbRes.status, errorText);
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    }
-    const tmdbMovie = await tmdbRes.json()
-    // Insert into your DB
-    m = await prisma.movie.create({
-      data: {
-        id: tmdbMovie.id.toString(),
-        title: tmdbMovie.title,
-        overview: tmdbMovie.overview,
-        posterPath: tmdbMovie.poster_path,
-        releaseDate: new Date(tmdbMovie.release_date),
-        rating: tmdbMovie.vote_average,
-        duration: tmdbMovie.runtime,
-        language: tmdbMovie.original_language,
-      }
-    })
+  const apiKey = process.env.TMDB_API_KEY
+  if (!apiKey) {
+    return NextResponse.json({ error: 'TMDB API key not set' }, { status: 500 })
   }
-  // Return the movie (from DB)
+
+  // Always fetch the real detail from TMDB
+  const tmdbRes = await fetch(
+    `https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=en-US`
+  )
+  if (!tmdbRes.ok) {
+    const text = await tmdbRes.text()
+    console.error('TMDB error:', tmdbRes.status, text)
+    return NextResponse.json({ error: 'Not found' }, { status: tmdbRes.status })
+  }
+  const tmdb = await tmdbRes.json()
+
+  // Upsert into your DB with all the fields
+  const m = await prisma.movie.upsert({
+    where: { id },
+    create: {
+      id: tmdb.id.toString(),
+      title: tmdb.title,
+      overview: tmdb.overview,
+      posterPath: tmdb.poster_path,
+      releaseDate: new Date(tmdb.release_date),
+      rating: tmdb.vote_average,
+      duration: tmdb.runtime ?? 0,
+      language: tmdb.original_language,
+      budget: tmdb.budget,
+      revenue: tmdb.revenue,
+    },
+    update: {
+      overview: tmdb.overview,
+      posterPath: tmdb.poster_path,
+      releaseDate: new Date(tmdb.release_date),
+      rating: tmdb.vote_average,
+      duration: tmdb.runtime ?? 0,
+      budget: tmdb.budget,
+      revenue: tmdb.revenue,
+    },
+  })
+
+  // Return it to the client
   return NextResponse.json({
     id: m.id,
     title: m.title,
     overview: m.overview,
     poster_path: m.posterPath,
-    release_date: m.releaseDate?.toISOString().slice(0, 10) ?? null,
-    vote_average: m.rating ?? 0,
-    runtime: m.duration ?? 0,
-    genres: [], // fill if you add genres
+    backdrop_path: tmdb.backdrop_path, // if you want it
+    release_date: m.releaseDate.toISOString().slice(0, 10),
+    vote_average: m.rating,
+    runtime: m.duration,
+    budget: m.budget ?? 0,
+    revenue: m.revenue ?? 0,
+    genres: tmdb.genres,             // or map your own Genre table
+    tagline: tmdb.tagline,
   })
 }

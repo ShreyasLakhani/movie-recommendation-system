@@ -1,9 +1,9 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import { MovieDetail, Genre } from '@/app/services/tmdb';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getMovieDetails } from '@/app/services/tmdb';
 
 // Movie details page component
 export default function MoviePage({
@@ -14,7 +14,7 @@ export default function MoviePage({
   // unwrap the Promise
   const { id } = use(params);
 
-  const [movie, setMovie] = useState<any>(null);
+  const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,7 +162,7 @@ export default function MoviePage({
             )}
             
             <div className="flex flex-wrap gap-2 mt-4">
-              {movie.genres?.map((genre: any) => (
+              {movie.genres?.map((genre: Genre) => (
                 <span 
                   key={genre.id} 
                   className="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-sm"

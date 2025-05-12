@@ -25,9 +25,15 @@ export default function RegisterPage() {
       setLoading(false)
       if (!res.ok) throw new Error(await res.text())
       router.push('/login')
-    } catch (err: any) {
+    } catch (error: unknown) {
       setLoading(false)
-      setError(err.message || 'Registration failed')
+      if (error instanceof Error) {
+        setError(error.message)
+      } else if (typeof error === 'string') {
+        setError(error)
+      } else {
+        setError('Registration failed')
+      }
     }
   }
 
