@@ -6,6 +6,7 @@ import { signIn } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import SplashImage from '@/app/components/SplashImage'
+import toast from 'react-hot-toast'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -29,20 +30,22 @@ export default function LoginPage() {
     
     setLoading(false)
     if (res?.error) {
+      toast.error(res.error)
       setError(res.error)
     } else {
+      toast.success('Signed in successfully')
       router.push('/')
       router.refresh()
     }
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
-    {/* Left: splash image (optional, match login if you want) */}
-    <SplashImage/>
+    <div className="fixed inset-0 flex flex-col md:flex-row">
+      {/* Left: splash image */}
+      <SplashImage/>
 
       {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 lg:p-24">
+      <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-8 md:p-16 lg:p-24">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h2 className="text-4xl font-bold text-white">Welcome!</h2>
@@ -112,15 +115,15 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium transition-colors disabled:opacity-50"
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium transition-colors disabled:opacity-50"
               >
-                {loading ? 'Signing in...' : 'SIGN IN'}
+                {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
 
             <p className="mt-6 text-center text-gray-400">
               Don't have an account?{' '}
-              <Link href="/register" className="text-purple-500 hover:text-purple-400">
+              <Link href="/register" className="text-blue-500 hover:underline">
                 Sign up
               </Link>
             </p>

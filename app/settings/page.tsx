@@ -1,108 +1,197 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { FiSettings, FiBell, FiEye, FiGlobe } from 'react-icons/fi'
+import toast from 'react-hot-toast'
+
+interface UserPreferences {
+  favoriteGenres: string[]
+  emailNotifications: boolean
+  darkMode: boolean
+  language: string
+}
+
+const GENRES = [
+  { id: '28', name: 'Action' },
+  { id: '12', name: 'Adventure' },
+  { id: '16', name: 'Animation' },
+  { id: '35', name: 'Comedy' },
+  { id: '80', name: 'Crime' },
+  { id: '99', name: 'Documentary' },
+  { id: '18', name: 'Drama' },
+  { id: '10751', name: 'Family' },
+  { id: '14', name: 'Fantasy' },
+  { id: '36', name: 'History' },
+  { id: '27', name: 'Horror' },
+  { id: '10402', name: 'Music' },
+  { id: '9648', name: 'Mystery' },
+  { id: '10749', name: 'Romance' },
+  { id: '878', name: 'Science Fiction' },
+  { id: '53', name: 'Thriller' },
+  { id: '10752', name: 'War' },
+  { id: '37', name: 'Western' }
+]
 
 export default function SettingsPage() {
-  const [emailNotifications, setEmailNotifications] = useState(true)
-  const [pushNotifications, setPushNotifications] = useState(true)
-  const [privateProfile, setPrivateProfile] = useState(false)
-  const [language, setLanguage] = useState('en')
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [preferences, setPreferences] = useState<UserPreferences>({
+    favoriteGenres: [],
+    emailNotifications: true,
+    darkMode: true,
+    language: 'en'
+  })
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login')
+    } else if (session?.user?.email) {
+      fetchUserPreferences()
+    }
+  }, [session, status])
+
+  const fetchUserPreferences = async () => {
+    try {
+      const response = await fetch('/api/settings')
+      if (response.ok) {
+        const data = await response.json()
+        setPreferences(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch preferences:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGenreToggle = (genreId: string) => {
+    setPreferences(prev => ({
+      ...prev,
+      favoriteGenres: prev.favoriteGenres.includes(genreId)
+        ? prev.favoriteGenres.filter(id => id !== genreId)
+        : [...prev.favoriteGenres, genreId]
+    }))
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(preferences),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save preferences')
+      }
+      toast.success('Preferences saved!')
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to save preferences'
+      )
+      console.error('Error saving preferences:', error)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="flex items-center space-x-3 mb-8">
-        <FiSettings className="w-8 h-8" />
-        <h1 className="text-3xl font-bold">Settings</h1>
-      </div>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <h1 className="text-3xl font-bold mb-8">Settings</h1>
 
-      <div className="space-y-6">
-        {/* Notifications */}
-        <section className="bg-[#1e293b] rounded-lg p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <FiBell className="w-5 h-5 text-purple-500" />
-            <h2 className="text-xl font-semibold">Notifications</h2>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-gray-400">Receive email updates about your account</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={emailNotifications}
-                  onChange={(e) => setEmailNotifications(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Push Notifications</p>
-                <p className="text-sm text-gray-400">Receive push notifications about new releases</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={pushNotifications}
-                  onChange={(e) => setPushNotifications(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-              </label>
-            </div>
+      <div className="space-y-8">
+        {/* Favorite Genres */}
+        <section className="bg-[#1e293b] p-6 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Favorite Genres</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {GENRES.map(genre => (
+              <button
+                key={genre.id}
+                onClick={() => handleGenreToggle(genre.id)}
+                className={`p-2 rounded-lg text-sm transition-colors ${
+                  preferences.favoriteGenres.includes(genre.id)
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {genre.name}
+              </button>
+            ))}
           </div>
         </section>
 
-        {/* Privacy */}
-        <section className="bg-[#1e293b] rounded-lg p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <FiEye className="w-5 h-5 text-purple-500" />
-            <h2 className="text-xl font-semibold">Privacy</h2>
-          </div>
+        {/* Notifications */}
+        <section className="bg-[#1e293b] p-6 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Notifications</h2>
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={preferences.emailNotifications}
+              onChange={e => setPreferences(prev => ({ ...prev, emailNotifications: e.target.checked }))}
+              className="form-checkbox h-5 w-5 text-purple-600 rounded focus:ring-purple-500"
+            />
+            <span>Receive email notifications about new releases and recommendations</span>
+          </label>
+        </section>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Private Profile</p>
-              <p className="text-sm text-gray-400">Make your profile visible to only your friends</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+        {/* Display Settings */}
+        <section className="bg-[#1e293b] p-6 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Display Settings</h2>
+          <div className="space-y-4">
+            <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
-                checked={privateProfile}
-                onChange={(e) => setPrivateProfile(e.target.checked)}
-                className="sr-only peer"
+                checked={preferences.darkMode}
+                onChange={e => setPreferences(prev => ({ ...prev, darkMode: e.target.checked }))}
+                className="form-checkbox h-5 w-5 text-purple-600 rounded focus:ring-purple-500"
               />
-              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              <span>Dark Mode</span>
             </label>
+
+            <div className="flex items-center space-x-3">
+              <label htmlFor="language" className="text-sm font-medium">Language:</label>
+              <select
+                id="language"
+                value={preferences.language}
+                onChange={e => setPreferences(prev => ({ ...prev, language: e.target.value }))}
+                className="bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+              </select>
+            </div>
           </div>
         </section>
 
-        {/* Language */}
-        <section className="bg-[#1e293b] rounded-lg p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <FiGlobe className="w-5 h-5 text-purple-500" />
-            <h2 className="text-xl font-semibold">Language</h2>
-          </div>
-
-          <div>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="w-full bg-[#0f172a] text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="en">English</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-            </select>
-          </div>
-        </section>
+        {/* Save Button */}
+        <div className="flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className={`px-6 py-2 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors ${
+              saving ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
     </div>
   )

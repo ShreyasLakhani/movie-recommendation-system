@@ -4,6 +4,8 @@ import { use, useEffect, useState } from 'react';
 import { MovieDetail, Genre } from '@/app/services/tmdb';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 // Movie details page component
 export default function MoviePage({
@@ -11,6 +13,29 @@ export default function MoviePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  
+  // Check authentication
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
+  // If still loading session or not authenticated, show loading state
+  if (status === 'loading' || status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // unwrap the Promise
   const { id } = use(params);
 

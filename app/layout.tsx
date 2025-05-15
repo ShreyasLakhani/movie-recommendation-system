@@ -5,6 +5,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/route";
 import { SessionProvider } from "./components/SessionProvider";
 import Navbar from "./components/Navbar";
+import ToastProvider from "./components/ToastProvider";
+import prisma from "./lib/prisma";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,14 +22,27 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession(authOptions);
 
+  // Default dark mode on
+  let darkMode = true;
+  if (session?.user?.email) {
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { preferences: true },
+    });
+    darkMode = user?.preferences?.darkMode ?? true;
+  }
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-[#0f172a] text-white min-h-screen`}>
+    <html lang="en" className={darkMode ? "dark" : ""}>
+      <body
+        className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen`}
+      >
         <SessionProvider session={session}>
-          <Navbar />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {children}
-          </main>
+            <Navbar />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              {children}
+            </main>
+            <ToastProvider />
         </SessionProvider>
       </body>
     </html>

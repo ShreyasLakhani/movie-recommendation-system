@@ -1,30 +1,30 @@
 import { PrismaClient } from '@prisma/client'
-import { getPopularMovies, getMovieDetails } from '../app/services/tmdb'
+import { hash } from 'bcrypt'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  const { results } = await getPopularMovies(1)
-  for (const m of results) {
-    // fetch full details so we seed runtime, budget, revenue
-    const detail = await getMovieDetails(m.id)
-    await prisma.movie.upsert({
-      where: { id: m.id.toString() },
-      update: {},
-      create: {
-        id: detail.id.toString(),
-        title: detail.title || '',
-        overview: detail.overview || '',
-        posterPath: detail.poster_path || '',
-        releaseDate: detail.release_date ? new Date(detail.release_date) : new Date(),
-        rating: detail.vote_average || 0,
-        language: 'en',
-        duration: detail.runtime || 0,
-        budget: detail.budget,
-        revenue: detail.revenue,
-      },
-    })
-  }
+  // Create test user with preferences
+  const hashedPassword = await hash('test123', 10)
+  const user = await prisma.user.upsert({
+    where: { email: 'test@example.com' },
+    update: {},
+    create: {
+      email: 'test@example.com',
+      name: 'Test User',
+      password: hashedPassword,
+      preferences: {
+        create: {
+          favoriteGenres: ['28', '12', '16'], // Action, Adventure, Animation
+          emailNotifications: true,
+          darkMode: true,
+          language: 'en'
+        }
+      }
+    }
+  })
+
+  console.log('Database seeded!')
 }
 
 main()

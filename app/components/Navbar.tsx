@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -7,6 +8,12 @@ import { useState, useRef, useEffect } from 'react'
 import { FiSearch, FiUser, FiLogOut, FiSettings, FiList } from 'react-icons/fi'
 
 export default function Navbar() {
+  const pathname = usePathname() || ''
+  // hide navbar on auth pages:
+  if (['/login', '/register', '/auth'].some(p => pathname.startsWith(p))) {
+    return null
+  }
+
   const { data: session } = useSession()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
