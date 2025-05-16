@@ -42,7 +42,7 @@ export default function LoginPage() {
   return (
     <div className="fixed inset-0 flex flex-col md:flex-row">
       {/* Left: splash image */}
-      <SplashImage/>
+    <SplashImage/>
 
       {/* Right Side - Login Form */}
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-8 md:p-16 lg:p-24">

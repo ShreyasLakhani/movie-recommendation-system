@@ -9,8 +9,9 @@ import toast from 'react-hot-toast'
 interface UserPreferences {
   favoriteGenres: string[]
   emailNotifications: boolean
-  darkMode: boolean
   language: string
+  region: string
+  contentMaturity: string
 }
 
 const GENRES = [
@@ -34,6 +35,22 @@ const GENRES = [
   { id: '37', name: 'Western' }
 ]
 
+const REGIONS = [
+  { code: 'US', name: 'United States' },
+  { code: 'GB', name: 'United Kingdom' },
+  { code: 'CA', name: 'Canada' },
+  { code: 'FR', name: 'France' },
+  { code: 'DE', name: 'Germany' },
+  { code: 'ES', name: 'Spain' },
+]
+
+const CONTENT_MATURITY = [
+  { id: 'all', name: 'All Content' },
+  { id: 'family', name: 'Family Friendly' },
+  { id: 'teen', name: 'Teen' },
+  { id: 'mature', name: 'Mature' },
+]
+
 export default function SettingsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -42,8 +59,9 @@ export default function SettingsPage() {
   const [preferences, setPreferences] = useState<UserPreferences>({
     favoriteGenres: [],
     emailNotifications: true,
-    darkMode: true,
-    language: 'en'
+    language: 'en',
+    region: 'US',
+    contentMaturity: 'all'
   })
 
   useEffect(() => {
@@ -63,6 +81,7 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error('Failed to fetch preferences:', error)
+      toast.error('Failed to load preferences')
     } finally {
       setLoading(false)
     }
@@ -149,19 +168,25 @@ export default function SettingsPage() {
           </label>
         </section>
 
-        {/* Display Settings */}
+        {/* Region and Language */}
         <section className="bg-[#1e293b] p-6 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Display Settings</h2>
+          <h2 className="text-xl font-semibold mb-4">Region & Language</h2>
           <div className="space-y-4">
-            <label className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={preferences.darkMode}
-                onChange={e => setPreferences(prev => ({ ...prev, darkMode: e.target.checked }))}
-                className="form-checkbox h-5 w-5 text-purple-600 rounded focus:ring-purple-500"
-              />
-              <span>Dark Mode</span>
-            </label>
+            <div className="flex items-center space-x-3">
+              <label htmlFor="region" className="text-sm font-medium">Region:</label>
+              <select
+                id="region"
+                value={preferences.region}
+                onChange={e => setPreferences(prev => ({ ...prev, region: e.target.value }))}
+                className="bg-gray-700 text-white rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                {REGIONS.map(region => (
+                  <option key={region.code} value={region.code}>
+                    {region.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="flex items-center space-x-3">
               <label htmlFor="language" className="text-sm font-medium">Language:</label>
@@ -169,7 +194,7 @@ export default function SettingsPage() {
                 id="language"
                 value={preferences.language}
                 onChange={e => setPreferences(prev => ({ ...prev, language: e.target.value }))}
-                className="bg-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="bg-gray-700 text-white rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="en">English</option>
                 <option value="es">Español</option>
@@ -177,6 +202,26 @@ export default function SettingsPage() {
                 <option value="de">Deutsch</option>
               </select>
             </div>
+          </div>
+        </section>
+
+        {/* Content Maturity */}
+        <section className="bg-[#1e293b] p-6 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4">Content Maturity</h2>
+          <div className="space-y-2">
+            {CONTENT_MATURITY.map(rating => (
+              <label key={rating.id} className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  name="contentMaturity"
+                  value={rating.id}
+                  checked={preferences.contentMaturity === rating.id}
+                  onChange={e => setPreferences(prev => ({ ...prev, contentMaturity: e.target.value }))}
+                  className="form-radio h-5 w-5 text-purple-600"
+                />
+                <span>{rating.name}</span>
+              </label>
+            ))}
           </div>
         </section>
 

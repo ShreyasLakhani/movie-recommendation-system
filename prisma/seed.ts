@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client'
-import { hash } from 'bcrypt'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
   // Create test user with preferences
-  const hashedPassword = await hash('test123', 10)
+  const hashedPassword = await bcrypt.hash('test123', 10)
   const user = await prisma.user.upsert({
     where: { email: 'test@example.com' },
     update: {},
@@ -17,16 +17,20 @@ async function main() {
         create: {
           favoriteGenres: ['28', '12', '16'], // Action, Adventure, Animation
           emailNotifications: true,
-          darkMode: true,
-          language: 'en'
+          language: 'en',
+          region: 'US',            // will override the default if you want
+          contentMaturity: 'all',  // will override the default if you want
         }
       }
     }
   })
 
-  console.log('Database seeded!')
+  console.log('✅ Database seeded!')
 }
 
 main()
-  .catch(console.error)
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
   .finally(() => prisma.$disconnect())

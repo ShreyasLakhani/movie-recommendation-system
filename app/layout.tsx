@@ -22,18 +22,8 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession(authOptions);
 
-  // Default dark mode on
-  let darkMode = true;
-  if (session?.user?.email) {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { preferences: true },
-    });
-    darkMode = user?.preferences?.darkMode ?? true;
-  }
-
   return (
-    <html lang="en" className={darkMode ? "dark" : ""}>
+    <html lang="en">
       <body
         className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen`}
       >

@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+
 const prisma = new PrismaClient()
 
 export async function GET(
@@ -49,6 +52,18 @@ export async function GET(
     },
   })
 
+  // figure out if the logged‐in user already has this in their watchlist
+  const session = await getServerSession(authOptions)
+  const userEmail = session?.user?.email
+  let inWatchlist = false
+  if (userEmail) {
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail },
+      include: { watchlist: true },
+    })
+    inWatchlist = user?.watchlist.some(w => w.id === id) ?? false
+  }
+
   // Return it to the client
   return NextResponse.json({
     id: m.id,
@@ -63,5 +78,6 @@ export async function GET(
     revenue: m.revenue ?? 0,
     genres: tmdb.genres,             // or map your own Genre table
     tagline: tmdb.tagline,
+    inWatchlist,
   })
 }

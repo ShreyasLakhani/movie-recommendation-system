@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import WatchlistButton from '@/app/components/WatchlistButton';
 
 // Movie details page component
 export default function MoviePage({
@@ -42,6 +43,7 @@ export default function MoviePage({
   const [movie, setMovie] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [inWatchlist, setInWatchlist] = useState(false);
 
   // Fetch movie details on component mount
   useEffect(() => {
@@ -55,6 +57,7 @@ export default function MoviePage({
         const movieData = await res.json();
         setMovie(movieData);
         setError(null);
+        setInWatchlist(movieData.inWatchlist);
       } catch (err) {
         console.error('Error fetching movie details:', err);
         setError('Failed to load movie details. Please try again later.');
@@ -65,6 +68,23 @@ export default function MoviePage({
 
     fetchMovieDetails();
   }, [id]);
+
+  // After that, add this effect to fetch the user's watchlist and
+  //    initialize `inWatchlist` properly:
+  useEffect(() => {
+    async function checkWatchlist() {
+      if (!session) return
+      try {
+        const res = await fetch('/api/watchlist')
+        if (!res.ok) return
+        const list: { id: string | number }[] = await res.json()
+        setInWatchlist(list.some(m => m.id.toString() === id))
+      } catch (err) {
+        console.error('Failed to check watchlist status', err)
+      }
+    }
+    checkWatchlist()
+  }, [session, id])
 
   // Display loading state
   if (loading) {
@@ -223,6 +243,14 @@ export default function MoviePage({
               <h3 className="text-xl font-semibold mb-2">Overview</h3>
               <p className="text-gray-300 leading-relaxed">{movie.overview || 'No overview available.'}</p>
             </div>
+            
+            <WatchlistButton
+              movieId={Number(id)}
+              initialInWatchlist={inWatchlist}
+              onChange={updatedList =>
+                setInWatchlist(updatedList.some(m => m.id.toString() === id))
+              }
+            />
             
             <Link href="/" className="mt-8 inline-block text-blue-400 hover:underline">
               ← Back to home
