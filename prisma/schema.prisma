@@ -20,6 +20,7 @@ model User {
   reminders   Reminder[]
   preferences UserPreferences?
   watchlist   Movie[]          @relation("UserWatchlist")
+  likes       Movie[]          @relation("UserLikes")
 }
 
 model UserPreferences {
@@ -50,6 +51,7 @@ model Movie {
   genres      Genre[]    @relation("GenreToMovie")
   playlists   Playlist[] @relation("PlaylistMovies")
   watchlist   User[]     @relation("UserWatchlist")
+  likedBy     User[]     @relation("UserLikes")
 }
 
 model Genre {
@@ -67,6 +69,7 @@ model Rating {
   movieId   String
   movie     Movie    @relation(fields: [movieId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
+  @@unique([userId, movieId])
 }
 
 model Playlist {

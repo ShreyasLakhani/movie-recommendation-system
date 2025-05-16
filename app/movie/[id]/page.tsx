@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import WatchlistButton from '@/app/components/WatchlistButton';
+import RatingStars from '@/app/components/RatingStars';
 
 // Movie details page component
 export default function MoviePage({
@@ -244,15 +245,20 @@ export default function MoviePage({
               <p className="text-gray-300 leading-relaxed">{movie.overview || 'No overview available.'}</p>
             </div>
             
+            <div className="mt-6">
+              <h3 className="text-xl font-semibold mb-2 text-gray-200">Your Rating</h3>
+              <RatingStars movieId={id} onRated={r => console.log('rated', r)} />
+            </div>
+            
             <WatchlistButton
               movieId={Number(id)}
               initialInWatchlist={inWatchlist}
-              onChange={updatedList =>
-                setInWatchlist(updatedList.some(m => m.id.toString() === id))
+              onChange={updated =>
+                setInWatchlist(updated.some(m => m.id.toString() === id))
               }
             />
             
-            <Link href="/" className="mt-8 inline-block text-blue-400 hover:underline">
+            <Link href="/" className="mx-5 mt-8 inline-block text-blue-400 hover:underline">
               ← Back to home
             </Link>
           </div>

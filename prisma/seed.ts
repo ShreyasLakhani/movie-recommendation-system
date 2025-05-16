@@ -8,8 +8,8 @@ async function main() {
   const hashedPassword = await bcrypt.hash('test123', 10)
   const user = await prisma.user.upsert({
     where: { email: 'test@example.com' },
-    update: {},
-    create: {
+      update: {},
+      create: {
       email: 'test@example.com',
       name: 'Test User',
       password: hashedPassword,
@@ -17,7 +17,7 @@ async function main() {
         create: {
           favoriteGenres: ['28', '12', '16'], // Action, Adventure, Animation
           emailNotifications: true,
-          language: 'en',
+        language: 'en',
           region: 'US',            // will override the default if you want
           contentMaturity: 'all',  // will override the default if you want
         }

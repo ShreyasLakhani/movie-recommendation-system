@@ -1,11 +1,17 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from './api/auth/[...nextauth]/route'
 import MovieGrid from './components/MovieGrid'
-import { getPopularMovies } from './services/movies'
+import { getPopularMovies, Movie } from './services/movies'
+import { getRecommendationsForUser } from './services/recommendations'
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
   const movies = await getPopularMovies()
+
+  let recommended: Movie[] = []
+  if (session?.user?.email) {
+    recommended = await getRecommendationsForUser(session.user.email)
+  }
 
   return (
     <div className="space-y-8">
@@ -25,7 +31,7 @@ export default async function Home() {
         <>
           <section>
             <h2 className="text-2xl font-bold mb-6">Recommended for You</h2>
-            <MovieGrid movies={movies.slice(5, 10)} />
+            <MovieGrid movies={recommended} />
           </section>
 
           <section>
