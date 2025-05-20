@@ -2,11 +2,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Movie } from '../services/tmdb';
-import { FiHeart } from 'react-icons/fi'
-import { FaHeart } from 'react-icons/fa'
-import { addToLikes, removeFromLikes } from '@/app/services/likes'
-import { useState, useEffect } from 'react'
-import { getRecommendationsForUser } from '@/app/services/recommendations'
 import { useSession } from 'next-auth/react'
 
 // Props interface for the MovieCard component
@@ -16,32 +11,7 @@ interface MovieCardProps {
 }
 
 // MovieCard component for displaying individual movie information
-export default function MovieCard({ movie, setRecommendations }: MovieCardProps) {
-  const [liked, setLiked] = useState(false)
-  const { data: session } = useSession()
-
-  useEffect(() => {
-    const checkIfLiked = async () => {
-      const response = await fetch(`/api/likes/${movie.id}`);
-      const data = await response.json();
-      setLiked(data.liked); // Assuming your API returns { liked: true/false }
-    };
-    checkIfLiked();
-  }, [movie.id]);
-
-  const toggleLike = async () => {
-    if (liked) {
-      await removeFromLikes(String(movie.id));
-    } else {
-      await addToLikes(String(movie.id));
-    }
-    setLiked(!liked);
-
-    if (session?.user?.email) {
-      const updatedRecommendations = await getRecommendationsForUser(session.user.email);
-      setRecommendations(updatedRecommendations);
-    }
-  };
+export default function MovieCard({ movie }: MovieCardProps) {
 
   // Base URL for TMDB image paths
   const imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
@@ -71,7 +41,7 @@ export default function MovieCard({ movie, setRecommendations }: MovieCardProps)
               />
             ) : (
               <div className="absolute inset-0 bg-gray-700 flex items-center justify-center">
-                <span className="text-gray-400">No poster available</span>
+                <span className="text-gray-400">{imageBaseUrl}</span>
               </div>
             )}
           </div>
@@ -96,12 +66,6 @@ export default function MovieCard({ movie, setRecommendations }: MovieCardProps)
           </div>
         </div>
       </Link>
-      <button
-        onClick={toggleLike}
-        className="absolute top-2 right-2 z-10 p-1 text-white bg-black/50 rounded-full hover:bg-red-600 transition"
-      >
-        {liked ? <FaHeart    size={18}/> : <FiHeart size={18}/>}
-      </button>
     </div>
   );
 } 

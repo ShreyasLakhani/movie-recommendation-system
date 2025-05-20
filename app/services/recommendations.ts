@@ -5,23 +5,21 @@ export async function getRecommendationsForUser(email: string): Promise<Movie[]>
   const user = await prisma.user.findUnique({
     where: { email },
     include: { 
-      likes: {
-        include: { genres: true } // Include genres for liked movies
-      }
+      watchlist: true // Include watchlist for the user
     }
   })
 
-  // Convert genre IDs to numbers
-  const likedGenres = user?.likes.flatMap(movie => movie.genres.map(genre => Number(genre.id))) || []
+  const watchlistMovies = user?.watchlist || []; // Get the user's watchlist
 
-  if (likedGenres.length === 0) {
-    // Fetch random popular movies if no liked genres
-    return fetchRandomPopularMovies()
+  if (watchlistMovies.length === 0) {
+    // Fetch random popular movies if no watchlist
+    return fetchRandomPopularMovies();
   }
 
-  // Fetch recommendations based on liked genres
-  const recommendations = await fetchRecommendationsBasedOnGenres(likedGenres)
-  return recommendations.slice(0, 5) // Limit to 5 recommendations
+  const genreIds = watchlistMovies.flatMap((movie: any) => movie.genre_ids ? movie.genre_ids.split(',').map((id: string) => parseInt(id, 10)) : []); // Extract and convert genre IDs from watchlist
+  const uniqueGenreIds = [...new Set(genreIds)]; // Get unique genre IDs
+
+  return fetchRecommendationsBasedOnGenres(uniqueGenreIds); // Fetch recommendations based on unique genres
 }
 
 async function fetchRecommendationsBasedOnGenres(genres: number[]): Promise<Movie[]> {
@@ -39,7 +37,21 @@ async function fetchRecommendationsBasedOnGenres(genres: number[]): Promise<Movi
   }
 
   const data = await response.json();
-  return data.results; // Return the array of movies
+  
+  // Map the results to match the Movie type
+  return data.results.map((item: any) => ({
+    id: item.id.toString(),
+    title: item.title,
+    overview: item.overview,
+    posterPath: item.poster_path,
+    releaseDate: new Date(item.release_date),
+    rating: item.vote_average,
+    duration: item.runtime || 0, // Default to 0 if runtime is not available
+    language: item.original_language,
+    budget: item.budget || null,
+    revenue: item.revenue || null,
+    genre_ids: item.genre_ids || [], // Ensure genre_ids is present
+  }));
 }
 
 async function fetchRandomPopularMovies(): Promise<Movie[]> {

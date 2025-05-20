@@ -3,10 +3,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Movie } from '../services/movies'
-import { FiHeart } from 'react-icons/fi'
-import { FaHeart } from 'react-icons/fa'
-import { addToLikes, removeFromLikes } from '@/app/services/likes'
-import { useState } from 'react'
 
 interface MovieGridProps {
   movies: Movie[]
@@ -16,17 +12,6 @@ export default function MovieGrid({ movies }: MovieGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
       {movies.map((movie) => {
-        const [liked, setLiked] = useState(false)
-
-        const toggleLike = async () => {
-          if (liked) {
-            await removeFromLikes(movie.id)
-          } else {
-            await addToLikes(movie.id)
-          }
-          setLiked(!liked)
-        }
-
         return (
           <div key={movie.id} className="relative group">
             <Link
@@ -58,12 +43,6 @@ export default function MovieGrid({ movies }: MovieGridProps) {
                 </div>
               </div>
             </Link>
-            <button
-              onClick={toggleLike}
-              className="absolute top-2 right-2 z-10 p-1 text-white bg-black/50 rounded-full hover:bg-red-600 transition"
-            >
-              {liked ? <FaHeart size={18} /> : <FiHeart size={18} />}
-            </button>
           </div>
         )
       })}
