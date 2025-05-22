@@ -11,8 +11,7 @@ interface MovieCardProps {
 }
 
 // MovieCard component for displaying individual movie information
-export default function MovieCard({ movie }: MovieCardProps) {
-
+export default function MovieCard({ movie, setRecommendations }: MovieCardProps) {
   // Base URL for TMDB image paths
   const imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
   
@@ -41,7 +40,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
               />
             ) : (
               <div className="absolute inset-0 bg-gray-700 flex items-center justify-center">
-                <span className="text-gray-400">{imageBaseUrl}</span>
+                <span className="text-gray-400">No poster available</span>
               </div>
             )}
           </div>
