@@ -40,11 +40,14 @@ model Movie {
   id          String     @id
   title       String
   overview    String
-  posterPath  String?
-  releaseDate DateTime
-  rating      Float
-  duration    Int
-  language    String
+  poster_path String?
+  backdrop_path String?
+  release_date DateTime?
+  vote_average Float?
+  genre_ids   Int[]
+  rating      Float?
+  duration    Int?
+  language    String?
   budget      Int?
   revenue     Int?
   ratings     Rating[]
