@@ -11,10 +11,11 @@ import { FaHeart } from 'react-icons/fa';
 interface MovieCardProps {
   movie: Movie;
   setRecommendations: React.Dispatch<React.SetStateAction<Movie[]>>;
+  onMovieAction?: () => void;
 }
 
 // MovieCard component for displaying individual movie information
-export default function MovieCard({ movie, setRecommendations }: MovieCardProps) {
+export default function MovieCard({ movie, setRecommendations, onMovieAction }: MovieCardProps) {
   const { data: session, status } = useSession();
   if (status === 'loading') {
     return <div className="relative group" />; // or a skeleton/loading state
@@ -44,6 +45,9 @@ export default function MovieCard({ movie, setRecommendations }: MovieCardProps)
       }
     } finally {
       setLoading(false);
+      if (onMovieAction) {
+        onMovieAction();
+      }
     }
   };
 
