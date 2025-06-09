@@ -13,9 +13,9 @@ import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 // Movie details page component
 export default function MoviePage({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ id: string }>;
-}) {
+}>) {
   const router = useRouter();
   const { data: session, status } = useSession();
   

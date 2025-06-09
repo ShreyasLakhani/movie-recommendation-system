@@ -12,17 +12,17 @@ async function fetchMovieFromTMDB(id: string) {
   return {
     id: id,
     title: data.title,
-    overview: data.overview || '',
-    poster_path: data.poster_path || '',
-    backdrop_path: data.backdrop_path || '',
+    overview: data.overview ?? '',
+    poster_path: data.poster_path ?? '',
+    backdrop_path: data.backdrop_path ?? '',
     release_date: data.release_date ? new Date(data.release_date) : null,
-    vote_average: data.vote_average || null,
+    vote_average: data.vote_average ?? null,
     genre_ids: Array.isArray(data.genres) ? data.genres.map((g: { id: string }) => g.id) : [],
     rating: null,
-    duration: data.runtime || null,
-    language: data.original_language || null,
-    budget: data.budget || null,
-    revenue: data.revenue || null,
+    duration: data.runtime ?? null,
+    language: data.original_language ?? null,
+    budget: data.budget ?? null,
+    revenue: data.revenue ?? null,
   };
 }
 
@@ -60,7 +60,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (!tmdbMovie) {
       return NextResponse.json({ error: 'Movie not found in TMDB.' }, { status: 404 });
     }
-    movie = await prisma.movie.create({ data: tmdbMovie });
   }
 
   await prisma.user.update({
