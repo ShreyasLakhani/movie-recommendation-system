@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { Movie } from '../services/movies'
 import MovieGrid from '../components/MovieGrid'
+import { LoadingSpinner } from '../components/LoadingSpinner'
 
 export default function WatchlistPage() {
   const { data: session } = useSession()
@@ -33,7 +34,7 @@ export default function WatchlistPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+        <LoadingSpinner />
       </div>
     )
   }

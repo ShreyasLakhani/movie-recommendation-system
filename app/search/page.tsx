@@ -6,6 +6,7 @@ import { Movie } from '@/app/services/movies';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 
 export default function SearchPage() {
   const { data: session, status } = useSession();
@@ -133,9 +134,7 @@ export default function SearchPage() {
 
       {/* Results */}
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-        </div>
+        <LoadingSpinner />
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {movies.map((movie) => (

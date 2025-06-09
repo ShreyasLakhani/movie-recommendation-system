@@ -6,6 +6,7 @@ import { Movie } from '../services/movies'
 import MovieGrid from './MovieGrid'
 import RecommendationSection from './RecommendationSection'
 import { getPopularMovies } from '../services/movies'
+import { LoadingSpinner } from './LoadingSpinner'
 
 interface HomePageClientProps {
   initialPopularMovies: Movie[];
@@ -13,20 +14,45 @@ interface HomePageClientProps {
 }
 
 export default function HomePageClient({ initialPopularMovies, initialRecommendedMovies }: HomePageClientProps) {
-  const { data: session } = useSession();
+
+  const { data: session, status } = useSession();
+
   const [popularMovies, setPopularMovies] = useState<Movie[]>(initialPopularMovies);
   const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>(initialRecommendedMovies);
-  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
-  const [loadingPopular, setLoadingPopular] = useState(false);
+
+  // Initialize loading states based on whether initial data was provided by SSR
+  const [loadingPopular, setLoadingPopular] = useState(false); // Always false as popular movies are always SSR-fetched
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false); // Always false as recommendations are always SSR-fetched initially
+
+  // New states to track if initial data for each section has been loaded
+  const [initialPopularLoaded, setInitialPopularLoaded] = useState(initialPopularMovies.length > 0);
+  const [initialRecommendationsLoaded, setInitialRecommendationsLoaded] = useState(initialRecommendedMovies.length > 0);
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(
+    initialPopularMovies.length > 0 && initialRecommendedMovies.length > 0
+  ); 
+
+  // Memoized fetch functions
+  const fetchPopularMovies = useCallback(async () => {
+    // This function should ideally not be called if initialPopularMovies are already loaded from SSR
+    // but kept as a fallback or for future dynamic loading.
+    setLoadingPopular(true);
+    try {
+      const movies = await getPopularMovies();
+      setPopularMovies(movies);
+    } catch (error) {
+      setPopularMovies([]);
+    } finally {
+      setLoadingPopular(false);
+      setInitialPopularLoaded(true); // Always mark as loaded after attempt
+    }
+  }, []);
 
   const fetchRecommendations = useCallback(async () => {
     if (!session?.user?.email) {
       setRecommendedMovies([]);
-      setLoadingRecommendations(false);
+      setInitialRecommendationsLoaded(true); // Mark as loaded even if no session
       return;
     }
-
-    setLoadingRecommendations(true);
     try {
       const res = await fetch(`/api/recommendations?email=${session.user.email}`);
       if (res.ok) {
@@ -40,35 +66,68 @@ export default function HomePageClient({ initialPopularMovies, initialRecommende
       console.error('Error fetching recommendations:', error);
       setRecommendedMovies([]);
     } finally {
-      setLoadingRecommendations(false);
+      setInitialRecommendationsLoaded(true); // Always mark as loaded after attempt
     }
   }, [session?.user?.email]);
 
-  const fetchPopularMovies = useCallback(async () => {
-    setLoadingPopular(true);
-    try {
-      const movies = await getPopularMovies();
-      setPopularMovies(movies);
-    } catch (error) {
-      console.error('Error fetching popular movies:', error);
-    } finally {
-      setLoadingPopular(false);
-    }
-  }, []);
-
+  // Effect to perform initial data fetching on component mount
+  // This effect runs only ONCE and primarily ensures correct initial state handling for SSR-provided data.
   useEffect(() => {
-    if (session?.user?.email && recommendedMovies.length === 0 && initialRecommendedMovies.length === 0) {
-      fetchRecommendations();
-    }
-  }, [session?.user?.email, fetchRecommendations, recommendedMovies.length, initialRecommendedMovies.length]);
+    // Popular movies are always expected to be present from SSR
+    setPopularMovies(initialPopularMovies);
+    setInitialPopularLoaded(true);
 
-  const handleMovieAction = () => {
+    // Recommendations are loaded from SSR. If initialRecommendedMovies is empty, it means the server found none.
+    setRecommendedMovies(initialRecommendedMovies);
+    setInitialRecommendationsLoaded(true);
+
+    // Mark overall initial load complete since both are handled by SSR.
+    setIsInitialLoadComplete(true);
+  }, [initialPopularMovies, initialRecommendedMovies]); // Depend on initial props to ensure effect re-runs if props change (though unlikely for these initial props)
+
+  // This useEffect will now only serve to update isInitialLoadComplete based on initialPopularLoaded and initialRecommendationsLoaded
+  useEffect(() => {
+    if (initialPopularLoaded && initialRecommendationsLoaded) {
+      setIsInitialLoadComplete(true);
+    }
+  }, [initialPopularLoaded, initialRecommendationsLoaded]);
+
+  // Effect to re-fetch recommendations dynamically when session changes (after initial load)
+  // This handles subsequent re-validations (e.g., when minimizing/restoring tab) and login/logout.
+  useEffect(() => {
+    // Only run this effect *after* the initial page load is complete
+    // and only if the session status changes to authenticated or unauthenticated
+    // (to avoid re-fetching during the initial 'loading' status of next-auth).
+    if (isInitialLoadComplete) {
+      if (status === 'authenticated') {
+        // If authenticated and no recommendations are currently loaded, fetch them.
+        // This handles cases where SSR didn't provide any or if the user logged in.
+        if (recommendedMovies.length === 0) {
+          fetchRecommendations();
+        }
+      } else if (status === 'unauthenticated') {
+        // If unauthenticated, clear recommendations.
+        setRecommendedMovies([]);
+        setLoadingRecommendations(false);
+      }
+    }
+  }, [session?.user?.email, status, isInitialLoadComplete, fetchRecommendations, recommendedMovies.length]);
+
+  // Callback for MovieCard actions (like/unlike)
+  const handleMovieAction = useCallback(() => {
     if (session?.user?.email) {
       fetchRecommendations();
     }
-    fetchPopularMovies();
-  };
+  }, [session?.user?.email, fetchRecommendations]);
 
+  // Overall page loading spinner:
+  // - Display if the initial data fetching is not yet complete (`!isInitialLoadComplete`)
+  // - Display if `next-auth` is in its initial loading phase (`status === 'loading'`)
+  if (!isInitialLoadComplete /* || status === 'loading' */) {
+    return <LoadingSpinner />;
+  }
+
+  // Render the content once initial data is loaded and auth status is resolved
   return (
     <div className="space-y-8">
       <section>
@@ -81,7 +140,7 @@ export default function HomePageClient({ initialPopularMovies, initialRecommende
           )}
         </div>
         {loadingPopular ? (
-          <div>Loading popular movies...</div>
+          <LoadingSpinner />
         ) : (
           <MovieGrid movies={popularMovies} onMovieAction={handleMovieAction} />
         )}
@@ -92,13 +151,12 @@ export default function HomePageClient({ initialPopularMovies, initialRecommende
           <RecommendationSection
             recommendedMovies={recommendedMovies}
             onMovieAction={handleMovieAction}
-            loading={loadingRecommendations}
           />
 
           <section>
             <h2 className="text-2xl font-bold mb-6">Continue Watching</h2>
             {loadingPopular ? (
-              <div>Loading continue watching...</div>
+              <LoadingSpinner />
             ) : (
               <MovieGrid movies={popularMovies.slice(10, 15)} onMovieAction={handleMovieAction} />
             )}

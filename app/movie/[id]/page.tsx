@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import WatchlistButton from '@/app/components/WatchlistButton';
 import RatingStars from '@/app/components/RatingStars';
+import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 
 // Movie details page component
 export default function MoviePage({
@@ -27,15 +28,7 @@ export default function MoviePage({
 
   // If still loading session or not authenticated, show loading state
   if (status === 'loading' || status === 'unauthenticated') {
-    return (
-      <div className="min-h-screen bg-gray-900 text-white p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // unwrap the Promise
@@ -89,15 +82,7 @@ export default function MoviePage({
 
   // Display loading state
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 text-white p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // Display error state
