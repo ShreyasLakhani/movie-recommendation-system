@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { FiSettings, FiBell, FiEye, FiGlobe } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 
 interface UserPreferences {

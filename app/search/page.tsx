@@ -5,11 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Movie } from '@/app/services/movies';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import { LoadingSpinner } from '@/app/components/LoadingSpinner';
 
 export default function SearchPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');

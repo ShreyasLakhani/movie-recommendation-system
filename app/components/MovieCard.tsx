@@ -15,7 +15,7 @@ interface MovieCardProps {
 }
 
 // MovieCard component for displaying individual movie information
-export default function MovieCard({ movie, setRecommendations, onMovieAction }: MovieCardProps) {
+export default function MovieCard({ movie, onMovieAction }: MovieCardProps) {
   const { data: session, status } = useSession();
   if (status === 'loading') {
     return <div className="relative group" />; // or a skeleton/loading state
@@ -50,9 +50,6 @@ export default function MovieCard({ movie, setRecommendations, onMovieAction }: 
       }
     }
   };
-
-  // Base URL for TMDB image paths
-  const imageBaseUrl = 'https://image.tmdb.org/t/p/w500';
   
   // Format the release date
   const formatDate = (dateString: string) => {

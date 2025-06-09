@@ -17,7 +17,7 @@ async function fetchMovieFromTMDB(id: string) {
     backdrop_path: data.backdrop_path || '',
     release_date: data.release_date ? new Date(data.release_date) : null,
     vote_average: data.vote_average || null,
-    genre_ids: Array.isArray(data.genres) ? data.genres.map((g: any) => g.id) : [],
+    genre_ids: Array.isArray(data.genres) ? data.genres.map((g: { id: string }) => g.id) : [],
     rating: null,
     duration: data.runtime || null,
     language: data.original_language || null,

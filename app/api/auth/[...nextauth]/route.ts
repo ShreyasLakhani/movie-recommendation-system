@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, trigger, session }) {
       if (trigger === "update" && session?.remember === false) {
         // Update session maxAge to 1 day if remember me is false
         token.maxAge = 24 * 60 * 60 // 1 day
@@ -59,9 +59,9 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token.maxAge) {
-        session.maxAge = token.maxAge
+        session.maxAge = token.maxAge as number;
       }
-      return session
+      return session;
     }
   },
   pages: {
