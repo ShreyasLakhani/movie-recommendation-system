@@ -1,7 +1,7 @@
 // app/api/search/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/[...nextauth]/auth.config';
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
       throw new Error('TMDB API request failed');
     }
 
-    let movies = await response.json();
+    const movies = await response.json();
 
     // Filter by rating if specified (TMDB doesn't support this in query params)
     if (rating) {

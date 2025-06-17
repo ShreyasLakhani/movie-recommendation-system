@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/[...nextauth]/auth.config';
 import prisma from '@/app/lib/prisma';
 
 // Helper to fetch movie details from TMDB and map to Prisma schema
@@ -60,6 +60,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (!tmdbMovie) {
       return NextResponse.json({ error: 'Movie not found in TMDB.' }, { status: 404 });
     }
+    // Create the movie in the database if it doesn't exist
+    movie = await prisma.movie.create({ data: tmdbMovie });
   }
 
   await prisma.user.update({

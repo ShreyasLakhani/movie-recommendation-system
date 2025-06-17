@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth'
-import { authOptions } from './api/auth/[...nextauth]/route'
+import { authOptions } from './api/auth/[...nextauth]/auth.config'
 import HomePageClient from './components/HomePageClient'
 import { getPopularMovies, Movie } from './services/movies'
 import { getRecommendationsForUser } from './services/recommendations'

@@ -1,6 +1,17 @@
 import prisma from '@/app/lib/prisma'
 import { Movie } from './movies'
 
+interface TMDBMovie {
+  id: number;
+  title: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date: string;
+  vote_average: number;
+  genre_ids: number[];
+}
+
 // Helper to fetch popular movies
 async function fetchPopularMovies(count: number): Promise<Movie[]> {
   const apiKey = process.env.TMDB_API_KEY;
@@ -41,3 +52,5 @@ export async function getRecommendationsForUser(email: string): Promise<Movie[]>
   }
   return fetchRecommendationsByGenres(genreIds, 5);
 }
+
+export const getRecommendations = getRecommendationsForUser;

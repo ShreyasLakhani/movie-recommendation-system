@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/[...nextauth]/auth.config';
 import prisma from '@/app/lib/prisma';
 import { getMovieDetails } from '@/app/services/movies';
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   
   if (!session?.user?.email) {

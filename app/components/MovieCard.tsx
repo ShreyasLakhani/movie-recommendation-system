@@ -10,25 +10,34 @@ import { FaHeart } from 'react-icons/fa';
 // Props interface for the MovieCard component
 interface MovieCardProps {
   movie: Movie;
-  setRecommendations: React.Dispatch<React.SetStateAction<Movie[]>>;
   onMovieAction?: () => void;
 }
 
 // MovieCard component for displaying individual movie information
 export default function MovieCard({ movie, onMovieAction }: MovieCardProps) {
   const { data: session, status } = useSession();
-  if (status === 'loading') {
-    return <div className="relative group" />; // or a skeleton/loading state
-  }
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!session?.user?.email) return;
-    fetch(`/api/likes/${movie.id}`)
-      .then(res => res.json())
-      .then(data => setLiked(data.liked));
-  }, [session?.user?.email, movie.id]);
+    if (status === 'loading' || !session?.user?.email) return;
+
+    const fetchLikedStatus = async () => {
+      try {
+        const res = await fetch('/api/likes');
+        if (res.ok) {
+          const data = await res.json();
+          setLiked(data.likedMovies.some((likedMovie: Movie) => likedMovie.id === movie.id));
+        } else {
+          console.error('Failed to fetch liked status');
+        }
+      } catch (error) {
+        console.error('Error fetching liked status:', error);
+      }
+    };
+
+    fetchLikedStatus();
+  }, [session?.user?.email, movie.id, status]);
 
   const toggleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -37,10 +46,18 @@ export default function MovieCard({ movie, onMovieAction }: MovieCardProps) {
     setLoading(true);
     try {
       if (liked) {
-        await fetch(`/api/likes/${movie.id}`, { method: 'DELETE' });
+        await fetch('/api/likes', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ movieId: movie.id }),
+        });
         setLiked(false);
       } else {
-        await fetch(`/api/likes/${movie.id}`, { method: 'POST' });
+        await fetch('/api/likes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ movieId: movie.id }),
+        });
         setLiked(true);
       }
     } finally {

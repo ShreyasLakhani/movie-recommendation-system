@@ -1,9 +1,9 @@
 import { getRecommendationsForUser } from '@/app/services/recommendations';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/app/api/auth/[...nextauth]/auth.config';
 import { NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   const userEmail = session?.user?.email;
 

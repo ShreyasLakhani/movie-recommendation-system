@@ -1,6 +1,8 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
+export const dynamic = 'force-dynamic';
+
+import Link from 'next/link';
 
 export default function AuthLanding() {
   return (
@@ -22,5 +24,5 @@ export default function AuthLanding() {
         </Link>
       </div>
     </div>
-  )
+  );
 }

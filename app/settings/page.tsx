@@ -51,7 +51,7 @@ const CONTENT_MATURITY = [
 ]
 
 export default function SettingsPage() {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -64,12 +64,12 @@ export default function SettingsPage() {
   })
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!session) {
       router.push('/login')
-    } else if (session?.user?.email) {
+    } else {
       fetchUserPreferences()
     }
-  }, [session, status])
+  }, [session, router])
 
   const fetchUserPreferences = async () => {
     try {

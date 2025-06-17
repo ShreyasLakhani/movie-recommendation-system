@@ -1,6 +1,17 @@
 const TMDB_API_KEY = process.env.TMDB_API_KEY
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 
+interface TMDBMovie {
+  id: number;
+  title: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  release_date: string;
+  vote_average: number;
+  genre_ids: number[];
+}
+
 export interface Movie {
   id: string
   title: string
@@ -27,7 +38,17 @@ export async function getPopularMovies(): Promise<Movie[]> {
   }
 
   const data = await res.json()
-  return data.results
+  const movies = data.results.map((movie: TMDBMovie) => ({
+    id: movie.id.toString(),
+    title: movie.title,
+    overview: movie.overview,
+    poster_path: movie.poster_path,
+    backdrop_path: movie.backdrop_path,
+    release_date: movie.release_date,
+    vote_average: movie.vote_average,
+    genre_ids: movie.genre_ids,
+  }))
+  return movies
 }
 
 export async function searchMovies(query: string): Promise<Movie[]> {
@@ -45,7 +66,17 @@ export async function searchMovies(query: string): Promise<Movie[]> {
   }
 
   const data = await res.json()
-  return data.results
+  const movies = data.results.map((movie: TMDBMovie) => ({
+    id: movie.id.toString(),
+    title: movie.title,
+    overview: movie.overview,
+    poster_path: movie.poster_path,
+    backdrop_path: movie.backdrop_path,
+    release_date: movie.release_date,
+    vote_average: movie.vote_average,
+    genre_ids: movie.genre_ids,
+  }))
+  return movies
 }
 
 export async function getMovieDetails(id: string): Promise<Movie | null> {
@@ -73,4 +104,6 @@ export async function getMovieDetails(id: string): Promise<Movie | null> {
     vote_average: data.vote_average,
     genre_ids: data.genres ? data.genres.map((g: any) => g.id) : [],
   }
-} 
+}
+
+export const getMovieById = getMovieDetails; 

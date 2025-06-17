@@ -19,6 +19,8 @@ export default function HomePageClient({ initialPopularMovies, initialRecommende
 
   const [popularMovies, setPopularMovies] = useState<Movie[]>(initialPopularMovies);
   const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>(initialRecommendedMovies);
+  const [likedMovies, setLikedMovies] = useState<Movie[]>([]);
+  const [loadingLikes, setLoadingLikes] = useState(true);
 
   // Initialize loading states based on whether initial data was provided by SSR
   const [loadingPopular, setLoadingPopular] = useState(false); // Always false as popular movies are always SSR-fetched
@@ -70,6 +72,50 @@ export default function HomePageClient({ initialPopularMovies, initialRecommende
     }
   }, [session?.user?.email]);
 
+  const fetchLikedMovies = useCallback(async () => {
+    if (!session?.user?.email) {
+      setLikedMovies([]);
+      setLoadingLikes(false);
+      return;
+    }
+    setLoadingLikes(true);
+    try {
+      const res = await fetch('/api/likes');
+      if (res.ok) {
+        const data = await res.json();
+        // Filter liked movies based on IDs, then fetch full movie details
+        const likedMovieIds = data.likedIds || [];
+        const moviesDetailsPromises = likedMovieIds.map(async (id: string) => {
+          const movieRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}`);
+          if (movieRes.ok) {
+            const movieData = await movieRes.json();
+            return {
+              id: movieData.id.toString(),
+              title: movieData.title,
+              overview: movieData.overview,
+              poster_path: movieData.poster_path,
+              backdrop_path: movieData.backdrop_path,
+              release_date: movieData.release_date,
+              vote_average: movieData.vote_average,
+              genre_ids: movieData.genres ? movieData.genres.map((g: any) => g.id) : [],
+            };
+          }
+          return null;
+        });
+        const fullLikedMovies = (await Promise.all(moviesDetailsPromises)).filter(Boolean);
+        setLikedMovies(fullLikedMovies as Movie[]);
+      } else {
+        console.error('Failed to fetch liked movies');
+        setLikedMovies([]);
+      }
+    } catch (error) {
+      console.error('Error fetching liked movies:', error);
+      setLikedMovies([]);
+    } finally {
+      setLoadingLikes(false);
+    }
+  }, [session?.user?.email]);
+
   // Effect to perform initial data fetching on component mount
   // This effect runs only ONCE and primarily ensures correct initial state handling for SSR-provided data.
   useEffect(() => {
@@ -105,25 +151,29 @@ export default function HomePageClient({ initialPopularMovies, initialRecommende
         if (recommendedMovies.length === 0) {
           fetchRecommendations();
         }
+        fetchLikedMovies(); // Fetch liked movies when authenticated
       } else if (status === 'unauthenticated') {
         // If unauthenticated, clear recommendations.
         setRecommendedMovies([]);
         setLoadingRecommendations(false);
+        setLikedMovies([]); // Clear liked movies if unauthenticated
+        setLoadingLikes(false);
       }
     }
-  }, [session?.user?.email, status, isInitialLoadComplete, fetchRecommendations, recommendedMovies.length]);
+  }, [session?.user?.email, status, isInitialLoadComplete, fetchRecommendations, recommendedMovies.length, fetchLikedMovies]);
 
   // Callback for MovieCard actions (like/unlike)
   const handleMovieAction = useCallback(() => {
     if (session?.user?.email) {
       fetchRecommendations();
+      fetchLikedMovies(); // Re-fetch liked movies after any movie action
     }
-  }, [session?.user?.email, fetchRecommendations]);
+  }, [session?.user?.email, fetchRecommendations, fetchLikedMovies]);
 
   // Overall page loading spinner:
   // - Display if the initial data fetching is not yet complete (`!isInitialLoadComplete`)
   // - Display if `next-auth` is in its initial loading phase (`status === 'loading'`)
-  if (!isInitialLoadComplete /* || status === 'loading' */) {
+  if (!isInitialLoadComplete && status === 'loading') {
     return <LoadingSpinner />;
   }
 
@@ -151,14 +201,17 @@ export default function HomePageClient({ initialPopularMovies, initialRecommende
           <RecommendationSection
             recommendedMovies={recommendedMovies}
             onMovieAction={handleMovieAction}
+            loading={loadingRecommendations} // Pass loading state to RecommendationSection
           />
 
           <section>
-            <h2 className="text-2xl font-bold mb-6">Continue Watching</h2>
-            {loadingPopular ? (
+            <h2 className="text-2xl font-bold mb-6">My Liked Movies</h2> {/* Renamed to My Liked Movies */}
+            {loadingLikes ? (
               <LoadingSpinner />
+            ) : likedMovies.length > 0 ? (
+              <MovieGrid movies={likedMovies} onMovieAction={handleMovieAction} />
             ) : (
-              <MovieGrid movies={popularMovies.slice(10, 15)} onMovieAction={handleMovieAction} />
+              <p className="text-gray-400">You haven't liked any movies yet. Like some movies to see them here!</p>
             )}
           </section>
         </>
